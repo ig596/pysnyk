@@ -35,6 +35,17 @@ class TestSnykClient(object):
             with pytest.raises(requests.exceptions.SSLError):
                 client.get("status")
 
+    def test_ssl_verify_live(self, client):
+        assert client.verify == True
+        response = client.request(requests.get, "https://google.com", headers=client.api_headers)
+        assert response.status_code == 200
+        client.api_url="https://expired.badssl.com/"
+        with pytest.raises(requests.exceptions.SSLError):
+            client.get("status")
+        client.verify = False
+        client.get("status")
+        assert response.status_code == 404
+
 
     def test_default_api_url(self, client):
         assert client.api_url == "https://snyk.io/api/v1"
