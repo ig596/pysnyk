@@ -1,7 +1,9 @@
 import os
 import re
 
+from unittest.mock import patch
 import pytest  # type: ignore
+import requests
 
 from snyk import SnykClient
 from snyk.__version__ import __version__
@@ -24,6 +26,15 @@ class TestSnykClient(object):
     @pytest.fixture
     def client(self):
         return SnykClient("token")
+
+
+    def test_ssl_verify(self,client):
+        assert client.verify==True
+        client.api_url="https://notsnyk.io/api/v1"
+        with patch('requests.get', side_effect=requests.exceptions.SSLError):
+            with pytest.raises(requests.exceptions.SSLError):
+                client.get("status")
+
 
     def test_default_api_url(self, client):
         assert client.api_url == "https://snyk.io/api/v1"
